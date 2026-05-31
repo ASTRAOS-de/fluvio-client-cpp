@@ -12,10 +12,10 @@ Before building the examples, ensure you have the following:
 
 ## What's Included?
 
-We provide two simple applications to demonstrate the core features of the client:
+We provide two simple applications to demonstrate the current object-oriented client API:
 
-- **Producer (`producer.cpp`)**: Connects to the Fluvio cluster as an admin to ensure a topic named `example-topic` exists. It then creates a producer and sends a mock JSON payload representing sensor data.
-- **Consumer (`consumer.cpp`)**: Connects to the Fluvio cluster, opens a stream on `example-topic`, and parses the incoming JSON data using `nlohmann::json`.
+- **Producer (`producer.cpp`)**: Uses `FluvioAdmin::connect()` to ensure a topic named `example-topic` exists, then uses `Fluvio::connect()` and `client->topic_producer(...)` to send a JSON payload.
+- **Consumer (`consumer.cpp`)**: Uses `Fluvio::connect()` and `client->consumer_stream(...)` to read from `example-topic`, then parses the incoming JSON data with `nlohmann::json`.
 
 ## Building the Examples
 
@@ -72,3 +72,14 @@ Parsed JSON successfully: Sensor=temp-01 Value=24.5
 ```
 
 Congratulations! You've successfully streamed data using C++!
+
+## API Mapping
+
+The examples mirror the types exported from `src/lib.rs`:
+
+- `FluvioAdmin::connect()` creates an admin client.
+- `Fluvio::connect()` creates the main client.
+- `client->topic_producer(...)` returns a `TopicProducerPool` for sending records.
+- `client->consumer_stream(...)` returns a `FluvioStream` for receiving records.
+- `record->value()` exposes the fetched payload bytes.
+

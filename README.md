@@ -14,6 +14,8 @@
 
 The client API documentation is written in standard Markdown and generated dynamically into C++ headers. You can find the full API overview in [docs/API.md](docs/API.md).
 
+The public API follows the same object-oriented layout as the original Fluvio client: connect with `Fluvio` or `FluvioAdmin`, then call methods on the returned objects.
+
 ## Installation
 
 You can install the client effortlessly without compiling the heavy Rust toolchain by using `vcpkg`.
@@ -37,8 +39,8 @@ target_link_libraries(main PRIVATE fluvio_client_cpp::fluvio_client_cpp)
 #include "fluvio-client-cpp/src/lib.rs.h"
 
 int main() {
-    auto admin = fluvio_admin_connect();
-    admin_create_topic(*admin, "a_topic", 1, 1);
+    auto admin = FluvioAdmin::connect();
+    admin->create_topic("a_topic", 1, 1);
     return 0;
 }
 ```
@@ -51,18 +53,20 @@ int main() {
 #include <string>
 
 int main() {
-    auto client = fluvio_connect();
-    auto producer = create_producer(*client, "my-topic");
+    auto client = Fluvio::connect();
+    auto producer = client->topic_producer("my-topic");
 
     std::string payload = "FOOBAR";
     uint8_t key[] = {};
 
-    producer_send(*producer, 
+    auto out = producer->send(
         rust::Slice<const uint8_t>(key, 0), 
         rust::Slice<const uint8_t>(reinterpret_cast<const uint8_t*>(payload.data()), payload.size())
     );
     
-    producer_flush(*producer);
+    auto meta = out->wait();
+    (void)meta;
+    producer->flush();
     return 0;
 }
 ```
@@ -74,16 +78,13 @@ int main() {
 #include <iostream>
 
 int main() {
-    auto client = fluvio_connect();
-    auto consumer = partition_consumer(*client, "my-topic", 0);
-    auto stream = consumer_stream(*consumer, 0); // Offset::beginning
+    auto client = Fluvio::connect();
+    auto stream = client->consumer_stream("my-topic", 0, 0); // Offset::beginning
 
-    for (int i = 0; i < 1; i++) {
-        auto rec = stream_next(*stream);
-        auto val = record_value(*rec);
-        std::string payload(val.begin(), val.end());
-        std::cout << payload << std::endl;
-    }
+    auto rec = stream->next();
+    auto val = rec->value();
+    std::string payload(val.begin(), val.end());
+    std::cout << payload << std::endl;
 
     return 0;
 }
@@ -108,4 +109,5 @@ cmake -B build
 cmake --build build
 cd build
 ctest --output-on-failure
+cd ..
 ```

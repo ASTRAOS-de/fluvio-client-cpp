@@ -3,11 +3,15 @@
 
 int main() {
     try {
-        std::cout << "Test: Creating configurations..." << std::endl;
-        auto cConfig = consumer_config_new();
-        consumer_config_max_bytes(*cConfig, 1024);
+        std::cout << "Test: Creating Consumer Config..." << std::endl;
+        auto consumerConfigBuilder = ConsumerConfigBuilder::create()
+            ->max_bytes(1024)
+            ->disable_continuous(true);
 
-        auto pConfig = producer_config_new();
+        std::cout << "Test: Creating Producer Config..." << std::endl;
+        auto producerConfigBuilder = TopicProducerConfigBuilder::create()
+            ->batch_size(1024)
+            ->linger(1000);
         
         std::cout << "Config Test Passed!" << std::endl;
     } catch (const std::exception& e) {

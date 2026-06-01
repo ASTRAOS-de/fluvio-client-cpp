@@ -11,36 +11,36 @@ int main() {
         const char* cert = std::getenv("FLUVIO_E2E_TLS_CERT");
         const char* ca = std::getenv("FLUVIO_E2E_TLS_CA");
 
-        auto fluvioConfig = fluvio_config_new("localhost:9003");
+        auto fluvioConfig = FluvioConfig::create("localhost:9003");
 
         if (domain && key && cert && ca) {
             std::cout << "[E2E-AUTH] Active TLS parameters detected! Configuring strict mTLS execution pipeline." << std::endl;
-            fluvio_config_set_tls_file_paths(*fluvioConfig, domain, key, cert, ca);
+            fluvioConfig->set_tls_file_paths(domain, key, cert, ca);
         } else {
             std::cout << "[E2E-AUTH] No TLS parameters detected in ENV. Proceeding with TLS-Disabled configuration checks." << std::endl;
-            fluvio_config_disable_tls(*fluvioConfig);
+            fluvioConfig->disable_tls();
             std::cout << "CXX TLS Auth Object Creation Successfully Evaluated Offline." << std::endl;
             return 0;
         }
         
         std::cout << "[E2E-AUTH] Attempting live Fluvio Socket TLS Auth Connection..." << std::endl;
-        auto authenticatedClient = fluvio_connect_with_config(*fluvioConfig);
+        auto authenticatedClient = Fluvio::connect_with_config(*fluvioConfig);
         std::cout << "[E2E-AUTH] Successfully authenticated to cluster natively via TLS mTLS bindings!" << std::endl;
 
         std::cout << "[E2E-AUTH] Creating producer for 'test-auth-topic'..." << std::endl;
-        auto producer = create_producer(*authenticatedClient, "test-auth-topic");
+        auto producer = authenticatedClient->topic_producer("test-auth-topic");
         
         uint8_t payload[] = {'s', 'e', 'c', 'u', 'r', 'e'};
-        producer_send(*producer, 
+        producer->send(
             rust::Slice<const uint8_t>(), 
             rust::Slice<const uint8_t>(payload, sizeof(payload)));
-        producer_flush(*producer);
+        producer->flush();
         std::cout << "[E2E-AUTH] 🔒 Payload shipped through TLS socket!" << std::endl;
 
         std::cout << "[E2E-AUTH] Bootstrapping Authenticated Consumer..." << std::endl;
-        auto stream = consumer_stream(*authenticatedClient, "test-auth-topic", 0, 0); 
-        auto rec = stream_next(*stream);
-        auto val = record_value(*rec);
+        auto stream = authenticatedClient->consumer_stream("test-auth-topic", 0, 0);
+        auto rec = stream->next();
+        auto val = rec->value();
 
         if(val.size() == 6) {
             std::cout << "[E2E-AUTH] 🔓 Successfully received authenticated payload matrix decrypting exact size match!" << std::endl;

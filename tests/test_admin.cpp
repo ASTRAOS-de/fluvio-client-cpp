@@ -4,15 +4,15 @@
 int main() {
     try {
         std::cout << "Test: Connecting to admin..." << std::endl;
-        auto admin = fluvio_admin_connect();
+        auto admin = FluvioAdmin::connect();
         
         std::cout << "Test: Creating topic 'admin-test-topic'..." << std::endl;
         try {
-            admin_create_topic(*admin, "admin-test-topic", 1, 1);
+            admin->create_topic("admin-test-topic", 1, 1);
         } catch (...) {}
         
         std::cout << "Test: Deleting topic 'admin-test-topic'..." << std::endl;
-        admin_delete_topic(*admin, "admin-test-topic");
+        admin->delete_topic("admin-test-topic");
 
         std::cout << "Admin Test Passed!" << std::endl;
     } catch (const std::exception& e) {

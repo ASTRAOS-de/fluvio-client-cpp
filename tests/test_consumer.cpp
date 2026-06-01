@@ -5,15 +5,15 @@
 int main() {
     try {
         std::cout << "Test: Connecting to Fluvio..." << std::endl;
-        auto client = fluvio_connect();
+        auto client = Fluvio::connect();
 
         std::cout << "Test: Creating stream for 'test-topic' partition 0..." << std::endl;
-        auto stream = consumer_stream(*client, "test-topic", 0, 0); // Offset::beginning()
+        auto stream = client->consumer_stream("test-topic", 0, 0); // Offset::beginning()
         
         std::cout << "Test: Fetching one record..." << std::endl;
-        auto rec = stream_next(*stream);
+        auto rec = stream->next();
 
-        auto val = record_value(*rec);
+        auto val = rec->value();
         std::cout << "Fetched record value of size: " << val.size() << std::endl;
 
         std::cout << "Consumer Test Passed!" << std::endl;

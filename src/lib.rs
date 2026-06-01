@@ -9,78 +9,119 @@ pub mod c_api;
 #[cxx::bridge]
 mod ffi {
     extern "Rust" {
-        type FluvioClient;
-        type FluvioProducer;
+        type Fluvio;
+        type TopicProducerPool;
         type FluvioStream;
-        type FluvioRecord;
+        type Record;
 
-        type FluvioConfigWrapper;
-        type ConsumerConfigWrapper;
-        type ProducerConfigWrapper;
-        type FluvioProduceOutput;
-        type FluvioRecordMetadata;
-        type FluvioAdminClient;
+        type FluvioConfig;
+        type ConsumerConfigBuilder;
+        type TopicProducerConfigBuilder;
+        type ProduceOutput;
+        type RecordMetadata;
+        type FluvioAdmin;
 
         /// Connects to a Fluvio cluster
-        fn fluvio_connect() -> Result<Box<FluvioClient>>;
+        #[Self = "Fluvio"]
+        fn connect() -> Result<Box<Fluvio>>;
+
         /// Connects to a Fluvio cluster with explicit config
-        fn fluvio_connect_with_config(config: &FluvioConfigWrapper) -> Result<Box<FluvioClient>>;
-
-        /// Creates a new topic producer configuration builder
-        fn producer_config_new() -> Box<ProducerConfigWrapper>;
-        /// Sets the maximum batch size in bytes for the producer
-        fn producer_config_batch_size(c: &mut ProducerConfigWrapper, size: usize);
-        /// Sets the linger time in milliseconds for the producer
-        fn producer_config_linger(c: &mut ProducerConfigWrapper, linger: u64);
-
-        /// Creates a new consumer configuration builder
-        fn consumer_config_new() -> Box<ConsumerConfigWrapper>;
-        /// Sets the maximum bytes to fetch per request
-        fn consumer_config_max_bytes(c: &mut ConsumerConfigWrapper, max: i32);
-        /// Disables continuous fetching
-        fn consumer_config_disable_continuous(c: &mut ConsumerConfigWrapper, val: bool);
-
-        /// Creates a new Fluvio cluster configuration with the specified endpoint
-        fn fluvio_config_new(addr: &str) -> Box<FluvioConfigWrapper>;
-        /// Loads the Fluvio configuration from the default profile path
-        fn fluvio_config_load() -> Result<Box<FluvioConfigWrapper>>;
-        /// Sets the endpoint for the cluster configuration
-        fn fluvio_config_set_endpoint(c: &mut FluvioConfigWrapper, endpoint: &str);
-        /// Sets the client identifier for the cluster configuration
-        fn fluvio_config_set_client_id(c: &mut FluvioConfigWrapper, client_id: &str);
-        fn fluvio_config_disable_tls(c: &mut FluvioConfigWrapper);
-        fn fluvio_config_set_anonymous_tls(c: &mut FluvioConfigWrapper);
-        fn fluvio_config_set_inline_tls(c: &mut FluvioConfigWrapper, domain: &str, key: &str, cert: &str, ca_cert: &str);
-        fn fluvio_config_set_tls_file_paths(c: &mut FluvioConfigWrapper, domain: &str, key_path: &str, cert_path: &str, ca_cert_path: &str);
+        #[Self = "Fluvio"]
+        fn connect_with_config(config: &FluvioConfig) -> Result<Box<Fluvio>>;
 
         /// Creates a producer for the specified topic
-        fn create_producer(client: &FluvioClient, topic: &str) -> Result<Box<FluvioProducer>>;
+        fn topic_producer(self: &Fluvio, topic: &str) -> Result<Box<TopicProducerPool>>;
+
         /// Creates a producer for the specified topic with custom configuration
-        fn create_producer_with_config(client: &FluvioClient, topic: &str, config: &ProducerConfigWrapper) -> Result<Box<FluvioProducer>>;
-        /// Sends a key-value record to the topic asynchronously
-        fn producer_send(producer: &FluvioProducer, key: &[u8], value: &[u8]) -> Result<Box<FluvioProduceOutput>>;
-        /// Flushes the producer batches
-        fn producer_flush(producer: &FluvioProducer) -> Result<()>;
-        /// Blocks and waits for the producer record confirmation
-        fn produce_output_wait(output: &mut FluvioProduceOutput) -> Result<Box<FluvioRecordMetadata>>;
+        fn topic_producer_with_config(self: &Fluvio, topic: &str, config: &TopicProducerConfigBuilder) -> Result<Box<TopicProducerPool>>;
 
         /// Creates a continuous stream for the consumer starting from the given offset index (0=Beginning, -1=End)
-        fn consumer_stream(client: &FluvioClient, topic: &str, partition: u32, offset_index: i64) -> Result<Box<FluvioStream>>;
+        fn consumer_stream(self: &Fluvio, topic: &str, partition: u32, offset_index: i64) -> Result<Box<FluvioStream>>;
+
+
+
+
+        /// Creates a new topic producer configuration builder
+        #[Self = "TopicProducerConfigBuilder"]
+        fn create() -> Box<TopicProducerConfigBuilder>;
+
+        /// Sets the maximum batch size in bytes for the producer
+        fn batch_size(self: &mut TopicProducerConfigBuilder, size: usize) -> Box<TopicProducerConfigBuilder>;
+
+        /// Sets the linger time in milliseconds for the producer
+        fn linger(self: &mut TopicProducerConfigBuilder, linger: u64) -> Box<TopicProducerConfigBuilder>;
+
+
+
+        /// Creates a new consumer configuration builder
+        #[Self = "ConsumerConfigBuilder"]
+        fn create() -> Box<ConsumerConfigBuilder>;
+        /// Sets the maximum bytes to fetch per request
+        fn max_bytes(self: &mut ConsumerConfigBuilder, max: i32) -> Box<ConsumerConfigBuilder>;
+        /// Disables continuous fetching
+        fn disable_continuous(self: &mut ConsumerConfigBuilder, val: bool) -> Box<ConsumerConfigBuilder>;
+
+
+
+        /// Creates a new Fluvio cluster configuration with the specified endpoint
+        #[Self = "FluvioConfig"]
+        fn create(addr: &str) -> Box<FluvioConfig>;
+
+        /// Loads the Fluvio configuration from the default profile path
+        #[Self = "FluvioConfig"]
+        fn load() -> Result<Box<FluvioConfig>>;
+
+        /// Sets the endpoint for the cluster configuration
+        fn set_endpoint(self: &mut FluvioConfig, endpoint: &str);
+
+        /// Sets the client identifier for the cluster configuration
+        fn set_client_id(self: &mut FluvioConfig, client_id: &str);
+
+        fn disable_tls(self: &mut FluvioConfig);
+
+        fn set_anonymous_tls(self: &mut FluvioConfig);
+
+        fn set_inline_tls(self: &mut FluvioConfig, domain: &str, key: &str, cert: &str, ca_cert: &str);
+
+        fn set_tls_file_paths(self: &mut FluvioConfig, domain: &str, key_path: &str, cert_path: &str, ca_cert_path: &str);
+
+
+
+
+        /// Sends a key-value record to the topic asynchronously
+        fn send(self: &TopicProducerPool, key: &[u8], value: &[u8]) -> Result<Box<ProduceOutput>>;
+
+        /// Flushes the producer batches
+        fn flush(self: &TopicProducerPool) -> Result<()>;
+
+
+
+        /// Blocks and waits for the producer record confirmation
+        fn wait(self: &mut ProduceOutput) -> Result<Box<RecordMetadata>>;
+
+
+
         /// Retrieves the next record from the stream blocks until available
-        fn stream_next(stream: &mut FluvioStream) -> Result<Box<FluvioRecord>>;
+        fn next(self: &mut FluvioStream) -> Result<Box<Record>>;
+
+
+
         /// Retrieves the payload value byte array from a fetched record
-        fn record_value(record: &FluvioRecord) -> Vec<u8>;
+        fn value(self: &Record) -> Vec<u8>;
         /// Retrieves the key byte array from a fetched record
-        fn record_key(record: &FluvioRecord) -> Vec<u8>;
+        fn key(self: &Record) -> Vec<u8>;
         /// Retrieves the literal offset index of the fetched record
-        fn record_offset(record: &FluvioRecord) -> i64;
+        fn offset(self: &Record) -> i64;
+
+
 
         /// Connects to the Fluvio Administrative controller
-        fn fluvio_admin_connect() -> Result<Box<FluvioAdminClient>>;
+        #[Self = "FluvioAdmin"]
+        fn connect() -> Result<Box<FluvioAdmin>>;
         /// Dispatches a command to create a new topic
-        fn admin_create_topic(admin: &FluvioAdminClient, topic: &str, partitions: i32, replicas: i32) -> Result<()>;
+        fn create_topic(self: &FluvioAdmin, topic: &str, partitions: i32, replicas: i32) -> Result<()>;
         /// Dispatches a command to violently delete a topic
-        fn admin_delete_topic(admin: &FluvioAdminClient, topic: &str) -> Result<()>;
+        fn delete_topic(self: &FluvioAdmin, topic: &str) -> Result<()>;
     }
 }
 

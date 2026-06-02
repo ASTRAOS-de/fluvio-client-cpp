@@ -1,14 +1,11 @@
 use fluvio::{
-    Offset as OffsetNative,
-    consumer::Record as NativeRecord,
-    consumer::ConsumerConfigExtBuilder as ConsumerConfigExtBuilderNative,
+    consumer::Record as NativeRecord
 };
 use fluvio_future::task::run_block_on;
 use futures_util::stream::StreamExt;
 use futures_util::stream::Stream;
 use std::pin::Pin;
 use fluvio::dataplane::link::ErrorCode;
-use crate::client::Fluvio;
 
 pub struct Record { pub inner: NativeRecord }
 

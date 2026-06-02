@@ -1,4 +1,3 @@
-use std::ops::DerefMut;
 use fluvio::FluvioConfig as FluvioConfigNative;
 use fluvio::consumer::ConsumerConfigBuilder as ConsumerConfigBuilderNative;
 use fluvio::TopicProducerConfigBuilder as TopicProducerConfigBuilderNative;

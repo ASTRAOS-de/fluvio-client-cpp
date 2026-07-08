@@ -78,11 +78,7 @@ add_test(NAME fluvio_config_test COMMAND test_config)
 
 # Pure C Native Test
 add_executable(test_c tests/test_c.c)
-target_include_directories(test_c PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(test_c PRIVATE
-    ${FLUVIO_STATIC_LIB}
-    stdc++ pthread dl m
-)
+target_link_libraries(test_c PRIVATE fluvio_client_cpp)
 add_test(NAME fluvio_c_native_test COMMAND test_c)
 
 # Auth E2E CXX Test
@@ -92,11 +88,7 @@ add_test(NAME fluvio_auth_test COMMAND test_auth)
 
 # Auth E2E C Native Test
 add_executable(test_auth_c tests/test_auth_c.c)
-target_include_directories(test_auth_c PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(test_auth_c PRIVATE
-    ${FLUVIO_STATIC_LIB}
-    stdc++ pthread dl m
-)
+target_link_libraries(test_auth_c PRIVATE fluvio_client_cpp)
 add_test(NAME fluvio_auth_c_test COMMAND test_auth_c)
 
 # Installation

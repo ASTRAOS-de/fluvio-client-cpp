@@ -43,6 +43,7 @@ configure_file(
 )
 
 add_library(fluvio_client_cpp STATIC ${CXXBRIDGE_SOURCES})
+add_library(ASTRAOS::fluvio_client_cpp ALIAS fluvio_client_cpp)
 
 target_include_directories(fluvio_client_cpp
         PUBLIC
@@ -117,13 +118,17 @@ install(FILES
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-install(TARGETS ASTRAOS::fluvio_client_cpp
+install(TARGETS fluvio_client_cpp
     EXPORT fluvio_client_cppTargets
+
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 install(EXPORT fluvio_client_cppTargets
     FILE fluvio_client_cppTargets.cmake
-    NAMESPACE fluvio_client_cpp::
+    NAMESPACE ASTRAOS::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/fluvio_client_cpp
 )
 

@@ -17,8 +17,7 @@ set(RUST_TARGET_DIR "target/debug")
 file(GLOB_RECURSE CXXBRIDGE_HEADERS "${RUST_TARGET_DIR}/build/*lib.rs.h")
 file(GLOB_RECURSE CXXBRIDGE_SOURCES_ALL "${RUST_TARGET_DIR}/build/*lib.rs.cc")
 file(GLOB_RECURSE CXX_CORE_HEADER "${RUST_TARGET_DIR}/build/*/cxx.h")
-file(GLOB_RECURSE RUST_STATIC_LIB "${RUST_TARGET_DIR}/build/*/out/libfluvio*.a")
-list(GET RUST_STATIC_LIB 0 FLUVIO_STATIC_LIB)
+set(FLUVIO_STATIC_LIB "${CMAKE_CURRENT_SOURCE_DIR}/${RUST_TARGET_DIR}/libfluvio_client_cpp.a")
 
 list(GET CXXBRIDGE_SOURCES_ALL 0 CXXBRIDGE_SOURCES)
 list(GET CXXBRIDGE_HEADERS 0 CXXBRIDGE_HEADER)
@@ -128,12 +127,11 @@ configure_package_config_file(
     cmake/fluvio_client_cppConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/fluvio_client_cppConfig.cmake
     INSTALL_DESTINATION
-        ${CMAKE_INSTALL_LIBDIR}/cmake/fluvio_client_cpp
+    ${CMAKE_INSTALL_LIBDIR}/cmake/fluvio_client_cpp
 )
 
 install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/fluvio_client_cppConfig.cmake
     DESTINATION
-        ${CMAKE_INSTALL_LIBDIR}/cmake/fluvio_client_cpp
+    ${CMAKE_INSTALL_LIBDIR}/cmake/fluvio_client_cpp
 )
-

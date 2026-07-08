@@ -44,6 +44,14 @@ configure_file(
 add_library(fluvio_client_cpp STATIC ${CXXBRIDGE_SOURCES})
 add_library(ASTRAOS::fluvio_client_cpp ALIAS fluvio_client_cpp)
 
+target_link_libraries(fluvio_client_cpp
+        INTERFACE
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_FULL_LIBDIR}/libfluvio_client_cpp.a>
+        $<BUILD_INTERFACE:${FLUVIO_STATIC_LIB}>
+        pthread
+        ${CMAKE_DL_LIBS}
+)
+
 target_include_directories(fluvio_client_cpp
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -57,37 +65,37 @@ target_include_directories(fluvio_client_cpp
 
 # Producer Test
 add_executable(test_producer tests/test_producer.cpp)
-target_link_libraries(test_producer PRIVATE fluvio_client_cpp ${FLUVIO_STATIC_LIB})
+target_link_libraries(test_producer PRIVATE fluvio_client_cpp)
 add_test(NAME fluvio_producer_test COMMAND test_producer)
 
 # Consumer Test
 add_executable(test_consumer tests/test_consumer.cpp)
-target_link_libraries(test_consumer PRIVATE fluvio_client_cpp ${FLUVIO_STATIC_LIB})
+target_link_libraries(test_consumer PRIVATE fluvio_client_cpp)
 add_test(NAME fluvio_consumer_test COMMAND test_consumer)
 
 # Admin Test
 add_executable(test_admin tests/test_admin.cpp)
-target_link_libraries(test_admin PRIVATE fluvio_client_cpp ${FLUVIO_STATIC_LIB})
+target_link_libraries(test_admin PRIVATE fluvio_client_cpp)
 add_test(NAME fluvio_admin_test COMMAND test_admin)
 
 # Config Test
 add_executable(test_config tests/test_config.cpp)
-target_link_libraries(test_config PRIVATE fluvio_client_cpp ${FLUVIO_STATIC_LIB})
+target_link_libraries(test_config PRIVATE fluvio_client_cpp)
 add_test(NAME fluvio_config_test COMMAND test_config)
 
 # Pure C Native Test
 add_executable(test_c tests/test_c.c)
-target_link_libraries(test_c PRIVATE fluvio_client_cpp ${FLUVIO_STATIC_LIB})
+target_link_libraries(test_c PRIVATE fluvio_client_cpp)
 add_test(NAME fluvio_c_native_test COMMAND test_c)
 
 # Auth E2E CXX Test
 add_executable(test_auth tests/test_auth.cpp)
-target_link_libraries(test_auth PRIVATE fluvio_client_cpp ${FLUVIO_STATIC_LIB})
+target_link_libraries(test_auth PRIVATE fluvio_client_cpp)
 add_test(NAME fluvio_auth_test COMMAND test_auth)
 
 # Auth E2E C Native Test
 add_executable(test_auth_c tests/test_auth_c.c)
-target_link_libraries(test_auth_c PRIVATE fluvio_client_cpp ${FLUVIO_STATIC_LIB})
+target_link_libraries(test_auth_c PRIVATE fluvio_client_cpp)
 add_test(NAME fluvio_auth_c_test COMMAND test_auth_c)
 
 # Installation

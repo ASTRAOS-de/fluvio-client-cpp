@@ -117,7 +117,7 @@ install(FILES
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-install(TARGETS fluvio_client_cpp
+install(TARGETS ASTRAOS::fluvio_client_cpp
     EXPORT fluvio_client_cppTargets
 )
 

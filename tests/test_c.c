@@ -1,4 +1,4 @@
-#include "fluvio.h"
+#include "fluvio_client_c/fluvio_client_c.h"
 #include <stdio.h>
 #include <string.h>
 

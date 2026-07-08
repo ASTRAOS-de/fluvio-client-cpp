@@ -27,6 +27,21 @@ list(GET CXX_CORE_HEADER 0 CXX_CORE_HDR)
 get_filename_component(CXX_CORE_DIR ${CXX_CORE_HDR} DIRECTORY)
 get_filename_component(CXX_ROOT_DIR ${CXX_CORE_DIR} DIRECTORY)
 
+set(GENERATED_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated_include/fluvio_client_cpp)
+file(MAKE_DIRECTORY ${GENERATED_INCLUDE_DIR}/rust)
+
+configure_file(
+    ${CXXBRIDGE_HEADER}
+    ${GENERATED_INCLUDE_DIR}/lib.rs.h
+    COPYONLY
+)
+
+configure_file(
+    ${CXX_CORE_HDR}
+    ${GENERATED_INCLUDE_DIR}/rust/cxx.h
+    COPYONLY
+)
+
 # Producer Test
 add_executable(test_producer tests/test_producer.cpp ${CXXBRIDGE_SOURCES})
 target_include_directories(test_producer PRIVATE 
@@ -95,3 +110,46 @@ target_link_libraries(test_auth_c PRIVATE
     stdc++ pthread dl m
 )
 add_test(NAME fluvio_auth_c_test COMMAND test_auth_c)
+
+# Installation
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+install(DIRECTORY
+    include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(DIRECTORY
+    ${CMAKE_CURRENT_BINARY_DIR}/generated_include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(FILES
+    ${FLUVIO_STATIC_LIB}
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(TARGETS fluvio_client_cpp
+    EXPORT fluvio_client_cppTargets
+)
+
+install(EXPORT fluvio_client_cppTargets
+    FILE fluvio_client_cppTargets.cmake
+    NAMESPACE fluvio_client_cpp::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/fluvio_client_cpp
+)
+
+configure_package_config_file(
+    cmake/fluvio_client_cppConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/fluvio_client_cppConfig.cmake
+    INSTALL_DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}/cmake/fluvio_client_cpp
+)
+
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/fluvio_client_cppConfig.cmake
+    DESTINATION
+        ${CMAKE_INSTALL_LIBDIR}/cmake/fluvio_client_cpp
+)
+

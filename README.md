@@ -28,7 +28,20 @@ In your `CMakeLists.txt`, simply find the package and link it:
 
 ```cmake
 find_package(fluvio_client_cpp CONFIG REQUIRED)
-target_link_libraries(main PRIVATE fluvio_client_cpp::fluvio_client_cpp)
+target_link_libraries(main PRIVATE ASTRAOS::fluvio_client_cpp)
+```
+
+Alternatively, you can build the library from source by fetching it during the CMake configure step and building it as part of your project:
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+        fluvio_client_cpp
+        GIT_REPOSITORY https://github.com/ASTRAOS-de/fluvio-client-cpp.git
+)
+FetchContent_MakeAvailable(fluvio_client_cpp)
+
+target_link_libraries(main PRIVATE ASTRAOS::fluvio_client_cpp)
 ```
 
 # Example Usage

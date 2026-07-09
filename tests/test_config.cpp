@@ -1,4 +1,4 @@
-#include "fluvio-client-cpp/src/lib.rs.h"
+#include <fluvio_client_cpp/fluvio_client_cpp.hpp>
 #include <iostream>
 
 int main() {

@@ -18,20 +18,14 @@ The public API follows the same object-oriented layout as the original Fluvio cl
 
 ## Installation
 
-You can install the client effortlessly without compiling the heavy Rust toolchain by using `vcpkg`.
+### vcpkg
 
-```bash
-vcpkg install fluvio-client-cpp
-```
+> **Note**
+> The vcpkg port is currently under development and is not yet available in the official vcpkg registry.
 
-In your `CMakeLists.txt`, simply find the package and link it:
+Until then, use the CMake FetchContent method below.
 
-```cmake
-find_package(fluvio_client_cpp CONFIG REQUIRED)
-target_link_libraries(main PRIVATE ASTRAOS::fluvio_client_cpp)
-```
-
-Alternatively, you can build the library from source by fetching it during the CMake configure step and building it as part of your project:
+You can build the library from source by fetching it during the CMake configure step and building it as part of your project:
 
 ```cmake
 include(FetchContent)

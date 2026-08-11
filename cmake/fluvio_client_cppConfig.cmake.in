@@ -1,3 +1,10 @@
 @PACKAGE_INIT@
 
-include("${CMAKE_CURRENT_LIST_DIR}/fluvio_client_cppTargets.cmake")
+include(CMakeFindDependencyMacro)
+find_dependency(Threads)
+
+if(NOT TARGET ASTRAOS::fluvio_client_cpp)
+    include("${CMAKE_CURRENT_LIST_DIR}/fluvio_client_cppTargets.cmake")
+endif()
+
+check_required_components(fluvio_client_cpp)

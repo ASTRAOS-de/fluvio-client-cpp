@@ -26,6 +26,12 @@ jobs:
       run: |
         cargo build --release
 
+    - name: Configure CMake
+      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build CMake project
+      run: cmake --build build --config Release
+
     - name: Package Release Tarball
       run: |
         mkdir -p fluvio-client-cpp-linux-x64/lib

@@ -118,6 +118,13 @@ mod ffi {
         /// Connects to the Fluvio Administrative controller
         #[Self = "FluvioAdmin"]
         fn connect() -> Result<Box<FluvioAdmin>>;
+        /// Connects to the Fluvio Administrative controller with explicit config
+        #[Self = "FluvioAdmin"]
+        fn connect_with_config(config: &FluvioConfig) -> Result<Box<FluvioAdmin>>;
+        /// Lists all topics
+        fn list_topics(self: &FluvioAdmin) -> Result<Vec<String>>;
+        /// Checks if a topic exists
+        fn  topic_exists(self: &FluvioAdmin, topic: &str) -> bool;
         /// Dispatches a command to create a new topic
         fn create_topic(self: &FluvioAdmin, topic: &str, partitions: i32, replicas: i32) -> Result<()>;
         /// Dispatches a command to violently delete a topic

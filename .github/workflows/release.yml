@@ -14,48 +14,42 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
 
-      - name: Cache cargo registry and target dir
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    - name: Build C++ Sys Library
+      run: |
+        cargo build --release
 
-      - name: Derive package version from tag
-        id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+    - name: Package Release Tarball
+      run: |
+        mkdir -p fluvio-client-cpp-linux-x64/lib
+        mkdir -p fluvio-client-cpp-linux-x64/include/fluvio-client-cpp/src
+        mkdir -p fluvio-client-cpp-linux-x64/include/rust
+        
+        # Copy static library
+        cp target/release/libfluvio_client_cpp.a fluvio-client-cpp-linux-x64/lib/
 
-      - name: Configure
-        run: |
-          cmake -S . -B build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" \
-            -DFLUVIO_CLIENT_CPP_BUILD_TESTS=OFF
+        # Copy manual C/C++ Headers
+        cp -r include/* fluvio-client-cpp-linux-x64/include/
+        
+        # Find and copy generated headers
+        find target/release/build -name 'lib.rs.h' -exec cp {} fluvio-client-cpp-linux-x64/include/fluvio-client-cpp/src/ \;
+        find target/release/build -name 'cxx.h' -exec cp {} fluvio-client-cpp-linux-x64/include/rust/ \;
+        
+        # Add CMake config
+        cp build/fluvio_client_cppConfig.cmake fluvio-client-cpp-linux-x64/
 
-      - name: Build
-        run: cmake --build build --config Release --parallel
+        tar -czvf fluvio-client-cpp-linux-x64.tar.gz fluvio-client-cpp-linux-x64/
 
-      - name: Install into staging directory
-        run: cmake --install build --config Release
-
-      - name: Package release tarball
-        run: |
-          mv install "${PACKAGE_NAME}"
-          tar -czvf "${PACKAGE_NAME}.tar.gz" "${PACKAGE_NAME}/"
-
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ${{ env.PACKAGE_NAME }}.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v1
+      with:
+        files: fluvio-client-cpp-linux-x64.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

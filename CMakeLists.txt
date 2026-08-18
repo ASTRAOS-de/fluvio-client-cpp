@@ -5,6 +5,8 @@ project(fluvio_client_cpp
         LANGUAGES CXX C
 )
 
+include(GNUInstallDirs)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -137,7 +139,7 @@ target_link_libraries(fluvio_client_cpp
         ${CMAKE_DL_LIBS}
         INTERFACE
         $<BUILD_INTERFACE:${FLUVIO_STATIC_LIB}>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_LIBDIR}/libfluvio_client_cpp.a>
+        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/libfluvio_client_cpp.a>
 )
 
 target_include_directories(fluvio_client_cpp
@@ -174,7 +176,6 @@ endif()
 # ---------------------------------------------------------------------------
 # Installation / find_package() support
 # ---------------------------------------------------------------------------
-include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 install(DIRECTORY

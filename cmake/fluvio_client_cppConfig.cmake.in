@@ -1,10 +1,22 @@
 @PACKAGE_INIT@
-
 include(CMakeFindDependencyMacro)
 find_dependency(Threads)
+
+if(NOT TARGET fluvio_rust_core)
+    add_library(fluvio_rust_core STATIC IMPORTED GLOBAL)
+    set_target_properties(fluvio_rust_core PROPERTIES
+        IMPORTED_LOCATION "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_LIBDIR@/libfluvio_client_cpp.a"
+    )
+endif()
+
+if(NOT TARGET fluvio_cxxbridge_runtime)
+    add_library(fluvio_cxxbridge_runtime STATIC IMPORTED GLOBAL)
+    set_target_properties(fluvio_cxxbridge_runtime PROPERTIES
+        IMPORTED_LOCATION "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_LIBDIR@/libcxxbridge1.a"
+    )
+endif()
 
 if(NOT TARGET ASTRAOS::fluvio_client_cpp)
     include("${CMAKE_CURRENT_LIST_DIR}/fluvio_client_cppTargets.cmake")
 endif()
-
 check_required_components(fluvio_client_cpp)

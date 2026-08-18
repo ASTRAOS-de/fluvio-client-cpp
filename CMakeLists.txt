@@ -88,6 +88,37 @@ list(GET CXX_CORE_HEADER 0 CXX_CORE_HDR)
 get_filename_component(CXX_CORE_DIR ${CXX_CORE_HDR} DIRECTORY)
 get_filename_component(CXX_ROOT_DIR ${CXX_CORE_DIR} DIRECTORY)
 
+# ---------------------------------------------------------------------------
+# Locate the cxx runtime archive (libcxxbridge1.a).
+# ---------------------------------------------------------------------------
+# The `cxx` crate compiles its C++ runtime (rust::cxxbridge1::Str, Vec<T>,
+# Error, etc.) into its OWN static archive under a build-script `out/` dir.
+# This is NOT folded into the crate's staticlib output, so it must be
+# located and linked separately, or every consumer gets undefined
+# references to rust::cxxbridge1::* symbols at final link time.
+file(GLOB_RECURSE FLUVIO_CXXBRIDGE_RUNTIME_LIB "${RUST_TARGET_DIR}/build/cxx-*/out/libcxxbridge1.a")
+list(LENGTH FLUVIO_CXXBRIDGE_RUNTIME_LIB _n_cxxbridge_runtime)
+
+if(_n_cxxbridge_runtime EQUAL 0)
+    message(FATAL_ERROR
+            "Could not find libcxxbridge1.a under ${RUST_TARGET_DIR}/build/cxx-*/out. "
+            "This archive provides the cxx C++ runtime (rust::cxxbridge1::Str, Vec<T>, "
+            "Error, etc.) and is required at link time. Try removing target/ and "
+            "re-running cmake."
+    )
+endif()
+
+if(_n_cxxbridge_runtime GREATER 1)
+    message(FATAL_ERROR
+            "Found multiple candidate libcxxbridge1.a archives under "
+            "${RUST_TARGET_DIR}/build (stale artifacts from a previous build?). "
+            "Run 'cargo clean' and re-configure.\n"
+            "Found: ${FLUVIO_CXXBRIDGE_RUNTIME_LIB}"
+    )
+endif()
+
+list(GET FLUVIO_CXXBRIDGE_RUNTIME_LIB 0 FLUVIO_CXXBRIDGE_RUNTIME_LIB)
+
 # Re-run cargo (and thus cmake) automatically whenever Rust sources change,
 # so incremental `cmake --build .` picks up Rust-side edits without needing
 # a manual reconfigure.
@@ -125,21 +156,50 @@ configure_file(
 )
 
 # ---------------------------------------------------------------------------
+# Imported targets for the two prebuilt static archives
+# ---------------------------------------------------------------------------
+# These replace the old raw-path INTERFACE generator-expression approach,
+# which had no real build dependency edge and could silently drop out of
+# generated link commands (especially across FetchContent boundaries with
+# parallel builds). IMPORTED targets propagate reliably through every level
+# of transitive static linking and carry a proper add_dependencies() edge
+# onto the cargo build step.
+#
+# Link order matters here: fluvio_rust_core calls into the cxxbridge1
+# runtime, so it must be listed BEFORE fluvio_cxxbridge_runtime on the link
+# line, or GNU ld's single-pass archive resolution will leave rust::cxxbridge1::*
+# symbols unresolved again.
+add_library(fluvio_rust_core STATIC IMPORTED GLOBAL)
+set_target_properties(fluvio_rust_core PROPERTIES
+        IMPORTED_LOCATION "${FLUVIO_STATIC_LIB}"
+)
+add_dependencies(fluvio_rust_core fluvio_client_cpp_rust)
+
+add_library(fluvio_cxxbridge_runtime STATIC IMPORTED GLOBAL)
+set_target_properties(fluvio_cxxbridge_runtime PROPERTIES
+        IMPORTED_LOCATION "${FLUVIO_CXXBRIDGE_RUNTIME_LIB}"
+)
+add_dependencies(fluvio_cxxbridge_runtime fluvio_client_cpp_rust)
+
+# ---------------------------------------------------------------------------
 # Library target
 # ---------------------------------------------------------------------------
 add_library(fluvio_client_cpp STATIC ${CXXBRIDGE_SOURCES})
 add_library(ASTRAOS::fluvio_client_cpp ALIAS fluvio_client_cpp)
 add_dependencies(fluvio_client_cpp fluvio_client_cpp_rust)
 
+set_target_properties(fluvio_client_cpp PROPERTIES
+        OUTPUT_NAME "fluvio_client_cpp_bridge"
+)
+
 find_package(Threads REQUIRED)
 
 target_link_libraries(fluvio_client_cpp
         PUBLIC
+        fluvio_rust_core
+        fluvio_cxxbridge_runtime
         Threads::Threads
         ${CMAKE_DL_LIBS}
-        INTERFACE
-        $<BUILD_INTERFACE:${FLUVIO_STATIC_LIB}>
-        $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_LIBDIR}/libfluvio_client_cpp.a>
 )
 
 target_include_directories(fluvio_client_cpp
@@ -190,6 +250,7 @@ install(DIRECTORY
 
 install(FILES
         ${FLUVIO_STATIC_LIB}
+        ${FLUVIO_CXXBRIDGE_RUNTIME_LIB}
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
